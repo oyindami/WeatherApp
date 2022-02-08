@@ -62,7 +62,7 @@ searchbtn.on("click", function (event) {
   ); //create button
   newCityBtn.text(cityName);
   fiveCardsEL.children().remove();
-  iconIMGDIVEL.children().remove(); //clears images
+  iconIMGDIVEL.children().remove();
   callAPI();
 });
 //ORIGINAL API CALL
@@ -91,6 +91,10 @@ function callAPI() {
       let nameDate =
         data.name + " (" + moment.unix(data.dt).format("MMM Do, YYYY") + ")";
       let temp = data.main.temp + " °F";
+      if (temp > 100) {
+        console.log("to hot");
+      } else console.log("its nice outside");
+
       let wind = data.wind.speed + "MPH";
       let humidity = data.main.humidity + "%";
       let lat = data.coord.lat;
