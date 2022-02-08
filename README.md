@@ -25,7 +25,9 @@ THEN I am presented with a 5-day forecast that displays the date, an icon repres
 WHEN I click on a city in the search history
 THEN I am again presented with current and future conditions for that city
 ```
+## Deployed site 
 
+https://oyindami.github.io/WeatherApp/
 ## Contact me
 
 [Github] (https://github.com/oyindami)
