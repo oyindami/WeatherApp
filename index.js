@@ -12,25 +12,17 @@ let windEL = $(".windCD");
 let humidtyEL = $(".humidityCD");
 let VCDEL = $(".uVCD");
 let uVIndex = 0.0;
-let iconIMGDIVEL = $(".weatherICONCD");
-let newCityBtn = $(".newCity");
-var recentS = [];
 
-//SEARCH BUTTON
-searchbtn.on("click", function (event) {
-  event.preventDefault();
-  cityNameP = searchBarEL.val().trim(); //Get value
-  recentS.push(cityNameP); //update array
-  localStorage.setItem("cityNames", JSON.stringify(recentS)); //store in local
-  newButtonsEL.append(
-    '<button class="btn btn-primary" type="button">' + cityNameP + "</button>"
-  );
-});
+let newCityBtn = $(".newCity");
+let recentS = [];
+let fiveCardsEL = $(".fiveCards");
+let iconIMGDIVEL = $(".weatherICONCD");
+let cityName = "";
 
 function display() {
-  var pullData = JSON.parse(localStorage.getItem("cityNames"));
+  let pullData = JSON.parse(localStorage.getItem("cityNames"));
   if (pullData != null) {
-    for (var i = 0; i < pullData.length; i++) {
+    for (let i = 0; i < pullData.length; i++) {
       newButtonsEL.append(
         '<button class="btn btn-primary" type="button"' +
           "id=" +
@@ -43,76 +35,121 @@ function display() {
       );
     }
   }
-  cityNameP = "Nigeria"; //Default
+  cityName = "Nigeria";
   callAPI();
 }
 display();
 
+// Eixisting Button Listener
 newButtonsEL.on("click", function (event) {
   event.preventDefault();
   console.log(event.target);
-  cityNameP = event.target.id;
-  console.log(cityNameP);
-  fiveCardsEL.children().remove(); //clears the 5 cards for new days!
-  iconIMGDIVEL.children().remove(); //clears images
+  cityName = event.target.id;
+  console.log(cityName);
+  fiveCardsEL.children().remove();
+  iconIMGDIVEL.children().remove();
   callAPI();
 });
 
-//Calling from the open weather app API
+//SEARCH BUTTON
+searchbtn.on("click", function (event) {
+  event.preventDefault();
+  cityName = searchBarEL.val().trim();
+  recentS.push(cityName);
+  localStorage.setItem("cityNames", JSON.stringify(recentS)); //store in local
+  newButtonsEL.append(
+    '<button class="btn btn-primary" type="button">' + cityName + "</button>"
+  ); //create button
+  newCityBtn.text(cityName);
+  fiveCardsEL.children().remove();
+  iconIMGDIVEL.children().remove(); //clears images
+  callAPI();
+});
+//ORIGINAL API CALL
 function callAPI() {
-  var mainURL =
+  let mainURL =
     "https://api.openweathermap.org/data/2.5/weather?q=" +
-    cityNameP +
+    cityName +
     "&units=imperial&appid=1e41fe8715bf0efe92d1f293a98c2c2d";
   fetch(mainURL) //GET is the default.
     .then(function (response) {
       //GET responses
       return response.json();
-    })
+    }) //required
     .then(function (data) {
+      //Store this and create buttons in local Storage
+      //ICON
       console.log(data);
-      var iconE = data.weather[0].icon;
-      var urlICON = "http://openweathermap.org/img/wn/" + iconE + "@2x.png";
+      let iconE = data.weather[0].icon;
+      let urlICON = "http://openweathermap.org/img/wn/" + iconE + "@2x.png";
       iconIMGDIVEL
         .append('<img alt = "Weather Icon" class="weatherIconI">')
         .attr("src", urlICON);
-      var imgICON = $(".weatherIconI");
+      let imgICON = $(".weatherIconI");
       imgICON.attr("src", urlICON);
-
-      var nameDate =
+      //OTHER DATA
+      let nameDate =
         data.name + " (" + moment.unix(data.dt).format("MMM Do, YYYY") + ")";
-      var temp = data.main.temp + " °F";
-      var wind = data.wind.speed + "MPH";
-      var humidity = data.main.humidity + "%";
-      var lat = data.coord.lat;
-      var lon = data.coord.lon;
+      let temp = data.main.temp + " °F";
+      let wind = data.wind.speed + "MPH";
+      let humidity = data.main.humidity + "%";
+      let lat = data.coord.lat;
+      let lon = data.coord.lon;
       uv(lat, lon);
-
-      //card information is pasted
+      //PRINT ON CARD
       nameDEL.text(nameDate);
       tempEL.text("Temperature: " + temp);
       windEL.text("Wind Speed: " + wind);
       humidtyEL.text("Humidity: " + humidity);
-      VCDEL.text("UV Index: " + uVIndex);
+      UVEL.text("UV Index: " + uVIndex);
     });
 }
-// UV INDEX 2nd API CALL
+
 function uv(lat, lon) {
-  var uvURL =
+  let uvURL =
     "https://api.openweathermap.org/data/2.5/onecall?lat=" +
     lat +
     "&lon=" +
     lon +
-    "&units=imperial&appid=1e41fe8715bf0efe92d1f293a98c2c2d8&exclude=minutely,hourly";
+    "&units=imperial&appid=1e41fe8715bf0efe92d1f293a98c2c2d&exclude=minutely,hourly";
   fetch(uvURL)
     .then(function (response) {
-      //GET responses
       return response.json();
-    })
+    }) //required
     .then(function (data) {
       uVIndex = data.current.uvi;
       fiveDays(data.daily);
     });
+}
+//FIVE DAY FORCAST
+function fiveDays(dataList) {
+  let temp = moment(dataList[5].dt_txt).format("ll");
+  for (let i = 1; i < 6; i++) {
+    // card needed for othere dates
+    fiveCardsEL.append(
+      `<div class="col-12 col-md-3 col-xl-2 fiveDayCards" style="padding:15px;"> <div class="card text-white bg-primary mb-3"><div class="card-body"><h3 class="card-title" id="dateName${i}"></h3><img alt="Weather" id ="weatherIconFD${i}" ><li id="tempFD${i}"></li><li id="windFD${i}"></li><li id="humidityFD${i}"></li></ul></div></div></div>`
+    );
+    let dateNameELH = $(`#dateName${i}`);
+    let iconIMGDIVEL = $(`#weatherIconFD${i}`);
+    let tempFDEL = $(`#tempFD${i}`);
+    let windFDEL = $(`#windFD${i}`);
+    let humFDEL = $(`#humidityFD${i}`);
+    //STORE NEEDED DATA
+    let nameDate = moment.unix(dataList[i].dt).format("MMM Do, YYYY");
+    let icon = dataList[i].weather[0].icon;
+    let temp = dataList[i].temp.day + " °F";
+    let wind = dataList[i].wind_speed + " MPH";
+    let humidity = dataList[i].humidity + "%";
+
+    //PRINT ON CARD
+    dateNameELH.text(nameDate);
+    let urlICON = "http://openweathermap.org/img/wn/" + icon + "@2x.png";
+    iconIMGDIVEL.attr("src", urlICON);
+    tempFDEL.text("Temperature: " + temp);
+    windFDEL.text("Wind Speed: " + wind);
+    humFDEL.text("Humidity: " + humidity);
+  }
+  console.log("worked!");
 }
 
 console.log("WORKING!");
